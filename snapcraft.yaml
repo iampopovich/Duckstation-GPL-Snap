@@ -1,6 +1,6 @@
-name: duckstation-gpl
+name: duckstation-fresh
 base: core24
-version: '0.1-7371'
+adopt-info: duckstation-fresh-app
 platforms:
   amd64:
     build-on: [amd64]
@@ -16,7 +16,7 @@ confinement: strict
 icon: org.duckstation.DuckStation.png
 
 apps:
-  duckstation-gpl:
+  duckstation-fresh:
     command-chain: [snap/command-chain/unset-qt_qpa_platform]
     command: usr/bin/duckstation-qt
     desktop: usr/share/applications/org.duckstation.DuckStation.desktop
@@ -53,16 +53,20 @@ plugs:
     default-provider: lxqt-support-core24
 
 parts:
-  duckstation-gpl-app:
+  duckstation-fresh-app:
     plugin: nil
     build-packages:
       - wget
     override-build: |
-      wget https://github.com/Kyuyrii/Duckstation-GPL3/releases/download/v0.1-7371/DuckStation-x64.AppImage
+      URL=$(curl -s "https://api.github.com/repos/Kyuyrii/Duckstation-GPL/releases/latest" | grep -o 'https://github.com/Kyuyrii/Duckstation-GPL/releases/download/[^"]*/DuckStation-x64\.AppImage' | head -1)
+      wget "$URL"
       chmod +x DuckStation-x64.AppImage
       ./DuckStation-x64.AppImage --appimage-extract
       mv -f squashfs-root/usr $CRAFT_PART_INSTALL/
-      sed -i 's|Name=DuckStation|Name=DuckStation GPL [Kyu]|' $CRAFT_PART_INSTALL/usr/share/applications/org.duckstation.DuckStation.desktop
+      sed -i 's|Name=DuckStation|Name=DuckStation Fresh|' $CRAFT_PART_INSTALL/usr/share/applications/org.duckstation.DuckStation.desktop
+
+      VERSION=$(echo "$URL" | sed -n 's#.*/download/v\([^/]*\)/.*#\1#p')
+      craftctl set version="$VERSION"
     prime:
       - usr/bin
       - usr/share/applications/org.duckstation.DuckStation.desktop
@@ -75,7 +79,7 @@ parts:
       - usr/lib/libSDL2-2.0.so*
 
   command-chain:
-    after: [duckstation-gpl-app]
+    after: [duckstation-fresh-app]
     plugin: dump
     source: ./command-chain/
     organize:
